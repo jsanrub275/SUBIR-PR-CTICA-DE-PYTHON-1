@@ -9,8 +9,7 @@ numero_maximo_random = 9999
 filas = 7
 columnas = 8
 
-#Generar una matriz de "i" filas por "j" columnas
-# matriz = [[i * j for j in range(columnas)] for i in range(filas)]
+#Generar una matriz de "i" filas por "j" columnas con un número random para cada elemento
 matriz = [[random.randint(numero_minimo_random, numero_maximo_random) for j in range(columnas)] for i in range(filas)]
 
 #Se muestra el contenido de la mátriz antes de su ordenación
@@ -24,6 +23,7 @@ while(hay_cambios):
     
     for i in range(filas):
         for j in range(columnas):
+            #Se ignora el intentar comparar el último elemento con un inexistente siguiente
             if(not(i == filas - 1 and j == columnas - 1)):
                 #Definimos índices para el segundo elemento a comparar
                 k = i
