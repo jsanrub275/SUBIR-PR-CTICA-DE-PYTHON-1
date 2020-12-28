@@ -4,8 +4,8 @@
 import random
 
 #Definir en variables el número de filas y columnas
-filas = 4
-columnas = 3
+filas = 7
+columnas = 8
 
 #Generar una matriz de "i" filas por "j" columnas
 # matriz = [[i * j for j in range(columnas)] for i in range(filas)]
@@ -21,9 +21,7 @@ while(hay_cambios):
     
     for i in range(filas):
         for j in range(columnas):
-            if(i == filas - 1 and j == columnas - 1):
-                continue
-            else:
+            if(not(i == filas - 1 and j == columnas - 1)):
                 #Definimos índices para el segundo elemento a comparar
                 k = i
                 l = j + 1
