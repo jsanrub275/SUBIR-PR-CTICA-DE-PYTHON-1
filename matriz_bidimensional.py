@@ -4,15 +4,18 @@
 import random
 
 #Definir en variables el número de filas y columnas
+numero_minimo_random = 1
+numero_maximo_random = 9999
 filas = 7
 columnas = 8
 
 #Generar una matriz de "i" filas por "j" columnas
 # matriz = [[i * j for j in range(columnas)] for i in range(filas)]
-matriz = [[random.randint(1, 9999) for j in range(columnas)] for i in range(filas)]
+matriz = [[random.randint(numero_minimo_random, numero_maximo_random) for j in range(columnas)] for i in range(filas)]
 
 #Se muestra el contenido de la mátriz antes de su ordenación
-print("Antes de ordenar: ", matriz)
+print("Antes de ordenar: ")
+print('\n'.join(['\t'.join([str(cell) for cell in row]) for row in matriz]))
 
 # Metodo de ordenación burbuja (se comparan todos con el siguiente y sólo se para cuando no se hace ningún intercambio)
 hay_cambios = True
@@ -41,5 +44,6 @@ while(hay_cambios):
 
 
 #Se muestra el contenido de la mátriz después de su ordenación
-print("Después de ordenar: ", matriz)
-
+print(" ")
+print("Después de ordenar: ")
+print('\n'.join(['\t'.join([str(cell) for cell in row]) for row in matriz]))
