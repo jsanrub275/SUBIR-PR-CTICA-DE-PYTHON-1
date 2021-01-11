@@ -3,7 +3,7 @@
 #Función principal
 def main():
     #Módulo para poder generar números pseudoaleatorio
-    import random
+    from random import randint
 
     #Definir el número de filas y columnas de la matriz bidimensional
     filas = 7
@@ -15,7 +15,7 @@ def main():
 
     #Generar una matriz bidimensional, en el que el número de filas y columnas se definan a través de variables 
     #Se genera un número pseudoaletorio para cada elmento que se crea
-    matriz = [[random.randint(numero_minimo_random, numero_maximo_random) for j in range(columnas)] for i in range(filas)]
+    matriz = [[randint(numero_minimo_random, numero_maximo_random) for j in range(columnas)] for i in range(filas)]
 
     #Se muestra el contenido de la mátriz antes de su ordenación
     print("\nAntes de ordenar:\n")
@@ -32,7 +32,11 @@ def main():
 
 #Función para dibujar la matriz bidimensional en filas y columnas
 def dibujar_matriz(matriz):
-    print('\n'.join(['\t'.join([str(columna) for columna in fila]) for fila in matriz]))
+    #print('\n'.join(['\t'.join([str(columna) for columna in fila]) for fila in matriz]))
+    for fila in matriz:
+        for columna in fila:
+            print("{:4d}  ".format(columna), end=" ")
+        print()
 
 
 
