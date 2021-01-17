@@ -11,16 +11,23 @@ https://github.com/pablo-moreno/python-aemet
 
 """
 
+##########################################################################################
+#                                                                                        #
+#                                                                                        #
+#                       I M P O R T S  / C O N S T A N T E S                             #
+#                                                                                        #
+#                                                                                        #
+##########################################################################################
 #Importar sólo las clases del modulo de AEMET que se van a utilizar
 from aemet import Aemet, Estacion
 import json
 import datetime 
 
-#Constantes para la API_KEY de AEMET y para las provincias de Andalucía
+#Constantes para la API_KEY de AEMET y para las provincias a consultar
 AEMET_API_KEY = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhMjBzYW5ydWJqMDQzM0BpZXMtbWFyZGVjYWRpei5jb20iLCJqdGkiOiIxZGNhMjhmYS02MWFhLTQ2YTEtYWM5NS1kMTM5NWRjMDc1YjYiLCJpc3MiOiJBRU1FVCIsImlhdCI6MTYxMDcwNTU5NiwidXNlcklkIjoiMWRjYTI4ZmEtNjFhYS00NmExLWFjOTUtZDEzOTVkYzA3NWI2Iiwicm9sZSI6IiJ9.mAsykwB_ERJXD6L2MY6N4OnBkpMxV7GbS5oMHaQncnw"
-#ANDALUCIA = ("CADIZ", "HUELVA", "SEVILLA", "CORDOBA", "GRANADA", "MALAGA", "JAEN", "ALMERIA")
-#ANDALUCIA = ("CADIZ", "HUELVA", "SEVILLA")
-ANDALUCIA = ("LEON", "VALLADOLID", "ALBACETE")
+#PROVINCIAS = ("CADIZ", "HUELVA", "SEVILLA", "CORDOBA", "GRANADA", "MALAGA", "JAEN", "ALMERIA")
+#PROVINCIAS = ("CADIZ", "HUELVA", "SEVILLA")
+PROVINCIAS = ("LEON", "VALLADOLID", "ALBACETE")
 
 #Constantes para el rango de fechas a consultar de la API de la AEMET
 FECHA_INICIO = "2021-01-01"
@@ -28,7 +35,13 @@ FECHA_FIN    = "2021-01-15"
 #FECHA_FIN = str(datetime.datetime.now())[:10]
 
 
-
+##########################################################################################
+#                                                                                        #
+#                                                                                        #
+#                               F U N C I O N E S                                        #
+#                                                                                        #
+#                                                                                        #
+##########################################################################################
 ### -------------------------------------------------- main() -------------------------------------------------- ###
 #Función principal
 def main():
@@ -43,19 +56,18 @@ def main():
 
     #Se consultan todas las estaciones para poder recorrerlas posteriormente,
     #ya que para obtener las valores climatológicos diarios es necesario el indicativo de la estación
-    estaciones = Estacion.get_estaciones(AEMET_API_KEY) #[:10]
+    estaciones = Estacion.get_estaciones(AEMET_API_KEY)
 
     #Se recorren las estaciones
     for estacion in estaciones:
         #Sólo se toman las que nos interesan
-        if estacion["provincia"] in ANDALUCIA:
+        if estacion["provincia"] in PROVINCIAS:
             #print("Provincia: {} Indicativo: {} Nombre: {}".format(estacion["provincia"], estacion["indicativo"], estacion["nombre"]))
             valores_climatologicos_diarios = aemet.get_valores_climatologicos_diarios(fecha_inicio, fecha_fin, estacion["indicativo"])
 
             #No hay datos para esa estación en el rango de fechas que se ha pasado
             if isinstance(valores_climatologicos_diarios, dict) and "estado" in valores_climatologicos_diarios:
-                #mostrar_no_hay_datos_estacion_en_rango_fechas(valores_climatologicos_diarios, estacion, FECHA_INICIO, FECHA_FIN)
-                pass
+                mostrar_no_hay_datos_estacion_en_rango_fechas(valores_climatologicos_diarios, estacion, FECHA_INICIO, FECHA_FIN)
             else:
                 #Recorrer lista para coger de cada entrada los valores que interesan
                 for valor_climatologico_diario in valores_climatologicos_diarios:
@@ -72,7 +84,7 @@ def main():
 
         mostrar_datos_minimas_maximas_temperaturas(datos_minimas_maximas_temperaturas)
     else:
-        print("No hay datos de temperaturas para {} en las fechas {}-{}".format(ANDALUCIA, FECHA_INICIO, FECHA_FIN))
+        print("No hay datos de temperaturas para {} en las fechas {}-{}".format(PROVINCIAS, FECHA_INICIO, FECHA_FIN))
 
 
 ### -------------------------------------------------- obtener_registro_temperaturas() -------------------------------------------------- ###
@@ -106,7 +118,7 @@ def obtener_registro_temperaturas(estacion, valor_climatologico_diario, datos_te
 #Función para mostrar los datos de una estación en un determinado día
 #con su temperatura mínima y máxima, indicando la hora en que ocurrió
 def mostrar_datos_estacion_dia(estacion, valor_climatologico_diario):
-    print("Provincia: {:10} Nombre: {:40} Fecha: {} Mínima{:>5} HoraMin: {:10} Máxima: {:>5} HoraMax: {:10}".format(\
+    print("Provincia: {:20} Nombre: {:40} Fecha: {} Mínima: {:>5} HoraMin: {:10} Máxima: {:>5} HoraMax: {:10}".format(\
         estacion["provincia"], \
         estacion["nombre"],  \
         valor_climatologico_diario["fecha"], \
@@ -134,7 +146,7 @@ def procesar_datos_temperaturas(datos_temperaturas):
 ### -------------------------------------------------- mostrar_no_hay_datos_estacion_en_rango_fechas() -------------------------------------------------- ###
 #Mostrar que no hay datos para esa estación en el rango de fechas que se ha pasado
 def mostrar_no_hay_datos_estacion_en_rango_fechas(valores_climatologicos_diarios, estacion, fecha_inicio, fecha_fin):
-    print("No hay datos de temperaturas entre el {} y el {}, para la estación {} de la pronvincia de {} y ubicada en {}.".format(\
+    print("No hay datos de temperaturas entre el {} y el {}, para la estación {} de la pronvincia de {}, ubicada en {}.".format(\
         fecha_inicio, \
         fecha_fin, \
         estacion["indicativo"], \
@@ -202,7 +214,7 @@ def obtener_minima_maxima_por_dia_y_provincia(datos_temperaturas):
 def mostrar_datos_minimas_maximas_temperaturas(datos_minimas_maximas_temperaturas):
     for dato_minimas_maximas_temperaturas in datos_minimas_maximas_temperaturas:
         #print(dato_minimas_maximas_temperaturas)
-        print("Provincia: {:10} Fecha: {} Mínima{:>5} HoraMin: {:10} Máxima: {:>5} HoraMax: {:10}".format( \
+        print("Provincia: {:20} Fecha: {} Mínima: {:>5} HoraMin: {:10} Máxima: {:>5} HoraMax: {:10}".format( \
             dato_minimas_maximas_temperaturas["provincia"], \
             dato_minimas_maximas_temperaturas["fecha"], \
             dato_minimas_maximas_temperaturas["minima"], \
