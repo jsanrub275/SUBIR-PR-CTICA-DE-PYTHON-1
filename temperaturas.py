@@ -19,7 +19,8 @@ import datetime
 #Constantes para la API_KEY de AEMET y para las provincias de Andalucía
 AEMET_API_KEY = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhMjBzYW5ydWJqMDQzM0BpZXMtbWFyZGVjYWRpei5jb20iLCJqdGkiOiIxZGNhMjhmYS02MWFhLTQ2YTEtYWM5NS1kMTM5NWRjMDc1YjYiLCJpc3MiOiJBRU1FVCIsImlhdCI6MTYxMDcwNTU5NiwidXNlcklkIjoiMWRjYTI4ZmEtNjFhYS00NmExLWFjOTUtZDEzOTVkYzA3NWI2Iiwicm9sZSI6IiJ9.mAsykwB_ERJXD6L2MY6N4OnBkpMxV7GbS5oMHaQncnw"
 #ANDALUCIA = ("CADIZ", "HUELVA", "SEVILLA", "CORDOBA", "GRANADA", "MALAGA", "JAEN", "ALMERIA")
-ANDALUCIA = ("CADIZ", "HUELVA", "SEVILLA")
+#ANDALUCIA = ("CADIZ", "HUELVA", "SEVILLA")
+ANDALUCIA = ("LEON", "VALLADOLID", "ALBACETE")
 
 #Constantes para el rango de fechas a consultar de la API de la AEMET
 FECHA_INICIO = "2021-01-01"
@@ -48,12 +49,13 @@ def main():
     for estacion in estaciones:
         #Sólo se toman las que nos interesan
         if estacion["provincia"] in ANDALUCIA:
-            #print("Provincia: {} Indicativo: {} Nombre: {}".format(estacion["provincia"], \estacion["indicativo"], estacion["nombre"]))
+            #print("Provincia: {} Indicativo: {} Nombre: {}".format(estacion["provincia"], estacion["indicativo"], estacion["nombre"]))
             valores_climatologicos_diarios = aemet.get_valores_climatologicos_diarios(fecha_inicio, fecha_fin, estacion["indicativo"])
 
             #No hay datos para esa estación en el rango de fechas que se ha pasado
             if isinstance(valores_climatologicos_diarios, dict) and "estado" in valores_climatologicos_diarios:
-                mostrar_no_hay_datos_estacion_en_rango_fechas(valores_climatologicos_diarios, estacion, FECHA_INICIO, FECHA_FIN)
+                #mostrar_no_hay_datos_estacion_en_rango_fechas(valores_climatologicos_diarios, estacion, FECHA_INICIO, FECHA_FIN)
+                pass
             else:
                 #Recorrer lista para coger de cada entrada los valores que interesan
                 for valor_climatologico_diario in valores_climatologicos_diarios:
@@ -64,10 +66,13 @@ def main():
     #Una vez se tienen todos los datos de las estaciones, se muestran o se salvan
     procesar_datos_temperaturas(datos_temperaturas)
 
+    #Si ha habido datos, se procesan para obtener la mínima y la máxima de cada provincia por día
     if datos_temperaturas:
         datos_minimas_maximas_temperaturas = obtener_minima_maxima_por_dia_y_provincia(datos_temperaturas[:])
-        for dato_minimas_maximas_temperuras in datos_minimas_maximas_temperaturas:
-            print(dato_minimas_maximas_temperuras)
+
+        mostrar_datos_minimas_maximas_temperaturas(datos_minimas_maximas_temperaturas)
+    else:
+        print("No hay datos de temperaturas para {} en las fechas {}-{}".format(ANDALUCIA, FECHA_INICIO, FECHA_FIN))
 
 
 ### -------------------------------------------------- obtener_registro_temperaturas() -------------------------------------------------- ###
@@ -91,6 +96,7 @@ def obtener_registro_temperaturas(estacion, valor_climatologico_diario, datos_te
         "maxima":      tmax,
         "hora_maxima": horatmax
     }
+
     return registro_temperaturas
 
 
@@ -138,10 +144,14 @@ def mostrar_no_hay_datos_estacion_en_rango_fechas(valores_climatologicos_diarios
 
 
 
+### -------------------------------------------------- obtener_minima_maxima_por_dia_y_provincia() -------------------------------------------------- ###
+#Obtener la temperatura mímina y máxima con sus correspondientes horas para el rango de fechas dadas para las estaciones consultadas
 def obtener_minima_maxima_por_dia_y_provincia(datos_temperaturas):
     datos_minimas_maximas_temperaturas = []
 
+    #Recorrer la lista para procesar cada entrada
     for dato_temperaturas in datos_temperaturas:
+        #Se guardan los valores que se quieren utilizar en variables
         provincia = dato_temperaturas["provincia"]
         fecha     = dato_temperaturas["fecha"]
         tmin      = dato_temperaturas["minima"]
@@ -149,31 +159,57 @@ def obtener_minima_maxima_por_dia_y_provincia(datos_temperaturas):
         tmax      = dato_temperaturas["maxima"]
         horatmax  = dato_temperaturas["hora_maxima"]
 
-        indice = next((index for (index, dato) in enumerate(datos_minimas_maximas_temperaturas) \
-                       if dato["provincia"] == provincia and dato["fecha"] == fecha), None)
+        #Si alguno de los valores de las temperaturas viene como None, se ignora la lectura
+        if tmin and tmax:
+            #Se obtiene el indice (si existe) para una determinada provincia y fecha en la lista que se crea en esta función
+            indice = next((index for (index, dato) in enumerate(datos_minimas_maximas_temperaturas) \
+                        if dato["provincia"] == provincia and dato["fecha"] == fecha), None)
 
-        if not indice:
-            registro_temperaturas = {
-                    "provincia":   provincia,
-                    "fecha":       fecha,
-                    "minima":      tmin,
-                    "hora_minima": horatmin,
-                    "maxima":      tmax,
-                    "hora_maxima": horatmax
-                }
+            #No hay entradas para la provincia y fecha que se esta procesando
+            if not indice:
+                #Se crea un diccionario para añadirlo posteriormente a la lista que se esta creando en la función
+                registro_temperaturas = {
+                        "provincia":   provincia,
+                        "fecha":       fecha,
+                        "minima":      tmin,
+                        "hora_minima": horatmin,
+                        "maxima":      tmax,
+                        "hora_maxima": horatmax
+                    }
 
-            datos_minimas_maximas_temperaturas.append(registro_temperaturas)
-        else:
-            #print(indice, provincia, fecha, tmin, datos_minimas_maximas_temperaturas[indice]["minima"], tmax, datos_minimas_maximas_temperaturas[indice]["maxima"] )
-            if tmin and tmin < datos_minimas_maximas_temperaturas[indice]["minima"]:
-                datos_minimas_maximas_temperaturas[indice]["minima"]      = tmin
-                datos_minimas_maximas_temperaturas[indice]["hora_minima"] = horatmin
+                datos_minimas_maximas_temperaturas.append(registro_temperaturas)
+            else:
+                #Se ha enconrrado una entrada para esa provincia y fecha
+                #print(indice, provincia, fecha, tmin, datos_minimas_maximas_temperaturas[indice]["minima"], tmax, datos_minimas_maximas_temperaturas[indice]["maxima"] )
+                #Si la temperatura mímina es menor que la guardada, se almacena esta junto con su hora de toma
+                if tmin < datos_minimas_maximas_temperaturas[indice]["minima"]:
+                    datos_minimas_maximas_temperaturas[indice]["minima"]      = tmin
+                    datos_minimas_maximas_temperaturas[indice]["hora_minima"] = horatmin
 
-            if tmax and tmax > datos_minimas_maximas_temperaturas[indice]["maxima"]:
-                datos_minimas_maximas_temperaturas[indice]["maxima"]      = tmax
-                datos_minimas_maximas_temperaturas[indice]["hora_maxima"] = horatmax
+                #Si la temperatura máxima es mayor que la guardada, se almacena esta junto con su hora de toma
+                if tmax > datos_minimas_maximas_temperaturas[indice]["maxima"]:
+                    datos_minimas_maximas_temperaturas[indice]["maxima"]      = tmax
+                    datos_minimas_maximas_temperaturas[indice]["hora_maxima"] = horatmax
 
+    #Se retorna la lista que se ha creado ordenada por provincia y fecha
     return sorted(datos_minimas_maximas_temperaturas, key=lambda k: (k["provincia"], k["fecha"]))
+
+
+
+
+### -------------------------------------------------- mostrar_datos_minimas_maximas_temperaturas() -------------------------------------------------- ###
+#Mostrar los valores de termperaturas mínimas y máximas por provincia y día
+def mostrar_datos_minimas_maximas_temperaturas(datos_minimas_maximas_temperaturas):
+    for dato_minimas_maximas_temperaturas in datos_minimas_maximas_temperaturas:
+        #print(dato_minimas_maximas_temperaturas)
+        print("Provincia: {:10} Fecha: {} Mínima{:>5} HoraMin: {:10} Máxima: {:>5} HoraMax: {:10}".format( \
+            dato_minimas_maximas_temperaturas["provincia"], \
+            dato_minimas_maximas_temperaturas["fecha"], \
+            dato_minimas_maximas_temperaturas["minima"], \
+            dato_minimas_maximas_temperaturas["hora_minima"], \
+            dato_minimas_maximas_temperaturas["maxima"], \
+            dato_minimas_maximas_temperaturas["hora_maxima"]))
+
 
 
 
